@@ -1,0 +1,471 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan de Capacitación Interactivo - Grupo INS</title>
+	<!--<link rel="icon" sizes="192x192" href="https://static.parastorage.com/client/pfavico.ico" type="image/x-icon"/> -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Corporate Calm (with Amber accent) -->
+    <!-- Application Structure Plan: Se ha diseñado una SPA (Single Page Application) con una estructura temática y orientada a tareas. La arquitectura consiste en: 1) Un encabezado con navegación fija. 2) Una sección de "Visión General" con KPIs. 3) Una sección interactiva de "Fases". 4) Un filtro por "Roles" que personaliza una "Ruta de Aprendizaje". 5) Una nueva sección "Cronograma de Actividades" que presenta las actividades del proyecto en un formato de acordeón interactivo para una fácil exploración. 6) Una visualización de "Evaluación" con un gráfico de radar. Esta estructura fue elegida porque prioriza la experiencia del usuario, permitiéndole encontrar información relevante y personalizada de forma rápida y visualmente atractiva. -->
+    <!-- Visualization & Content Choices: 
+        - Resumen Ejecutivo, Objetivos, Fases, Roles, Módulos, KPIs: Sin cambios respecto a la versión anterior.
+        - Cronograma de Actividades (Nuevo): El contenido del CSV se presenta en un acordeón interactivo. (Goal: Organize/Inform, Method: Interactive Accordion (HTML/JS/CSS), Justification: Permite a los usuarios explorar las actividades fase por fase sin ser abrumados por una lista larga. Es una estructura clara y jerárquica).
+        - Tabla de Actividades (Nuevo): Dentro de cada panel del acordeón, se utiliza una tabla estilizada con Tailwind. (Goal: Inform, Method: HTML Table, Justification: Presenta los detalles de cada actividad de forma estructurada y legible).
+        - Botón de Impresión (Nuevo): Un botón claro que enlaza a una versión imprimible. (Goal: Task-Oriented, Method: Styled Link, Justification: Proporciona una funcionalidad solicitada de forma directa).
+        - Criterios de Evaluación: Visualizados con un gráfico de radar de Chart.js. (Goal: Inform/Compare, Method: Canvas Chart (Chart.js), Justification: Comunica eficazmente un conjunto de datos multidimensional).
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .phase-card, .module-card {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .phase-card:hover, .module-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 40vh;
+            width: 100%;
+            max-width: 600px;
+            max-height: 400px;
+        }
+        .module-card-dimmed {
+            opacity: 0.4;
+            filter: grayscale(80%);
+        }
+        .smooth-scroll {
+            scroll-behavior: smooth;
+        }
+        .section-fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .section-fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .accordion-header {
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out, padding 0.5s ease-in-out;
+        }
+        .accordion-content.open {
+            max-height: 1000px; /* Adjust as needed */
+        }
+        .accordion-icon {
+            transition: transform 0.3s;
+        }
+        .accordion-header.open .accordion-icon {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body class="text-slate-800 smooth-scroll">
+
+    <header class="bg-white/80 backdrop-blur-lg shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+		   <div class="flex items-center space-x-4">
+           <!-- Logo -->
+               <img src="logo-consis.png" alt="Logo Consis" class="h-10">
+
+           <!-- Título -->
+               <div class="text-2xl font-bold text-sky-800">
+                   Grupo<span class="font-normal text-sky-600"> INS </span> | Plan de Capacitación
+               </div> 
+	<!-- <img src="logo-university.png" alt="Logo Consis University" class="h-10"> -->
+           </div>
+         <!--   <div class="text-2xl font-bold text-sky-800">
+                Grupo<span class="font-normal text-sky-600">INS</span> | Plan de Capacitación
+				<link rel="icon" sizes="192x192" href="https://static.parastorage.com/client/pfavico.ico" type="image/x-icon"/>
+            </div>
+		 -->
+            <div class="hidden md:flex space-x-8">
+                <a href="#overview" class="nav-link text-slate-600 hover:text-sky-700 border-b-2 border-transparent hover:border-sky-600">Visión General</a>
+                <a href="#phases" class="nav-link text-slate-600 hover:text-sky-700 border-b-2 border-transparent hover:border-sky-600">Fases</a>
+                <a href="#roles" class="nav-link text-slate-600 hover:text-sky-700 border-b-2 border-transparent hover:border-sky-600">Roles</a>
+                <a href="#activities" class="nav-link text-slate-600 hover:text-sky-700 border-b-2 border-transparent hover:border-sky-600">Actividades</a>
+                <a href="#evaluation" class="nav-link text-slate-600 hover:text-sky-700 border-b-2 border-transparent hover:border-sky-600">Evaluación</a>
+            </div>
+			<img src="logo-university.png" alt="Logo Consis University" class="h-10">
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+
+        <section id="overview" class="text-center mb-20 section-fade-in">
+		    <!-- <div class="text-2xl font-bold text-sky-800">
+			    Grupo<span class="font-normal text-sky-600"> INS </span> | Plan de Capacitación
+            <h1 class="text-4xl md:text-5xl font-bold text-sky-900 mb-4">Capacitación para la Modernización</h1> -->
+			    <div class="flex items-center space-x-4">
+                    
+					<div class="text-2xl font-bold text-sky-800">
+					    <h1 class="text-4xl md:text-5xl font-bold text-sky-900 mb-4">Capacitación para la Modernización del Grupo</h1>
+                    </div>
+					<img src="logo-ins.png" alt="Logo Grupo INS" class="h-10">
+			    </div>
+            <p class="text-lg text-slate-600 max-w-3xl mx-auto mb-8">
+                Este plan interactivo detalla la estrategia integral para capacitar a nuestros funcionarios en el nuevo Core de Seguros. El objetivo es asegurar una transición exitosa, potenciar la eficiencia y maximizar el aprovechamiento de la nueva tecnología para consolidar el liderazgo del Grupo INS.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200">
+                    <h3 class="text-sky-700 font-bold text-xl mb-2">Alineación Estratégica</h3>
+                    <p class="text-slate-600">Asegurar que la formación esté perfectamente alineada con los objetivos de modernización del proyecto.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200">
+                    <h3 class="text-sky-700 font-bold text-xl mb-2">Desarrollo de Competencias</h3>
+                    <p class="text-slate-600">Desarrollar habilidades técnicas y funcionales clave para cada rol dentro de la organización.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200">
+                    <h3 class="text-sky-700 font-bold text-xl mb-2">Eficiencia Operativa</h3>
+                    <p class="text-slate-600">Capacitar al personal para ejecutar sus tareas diarias con confianza y eficacia desde el primer día.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="phases" class="mb-20 section-fade-in">
+            <h2 class="text-3xl font-bold text-center text-sky-900 mb-2">Un Viaje de Aprendizaje en 3 Fases</h2>
+            <p class="text-center text-slate-600 mb-12 max-w-2xl mx-auto">El plan se estructura en tres fases progresivas para construir el conocimiento de manera sólida y gradual. Haga clic en cada fase para explorar sus detalles.</p>
+            <div id="phases-container" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            </div>
+        </section>
+        
+        <div id="phase-details" class="mb-20"></div>
+
+        <section id="roles" class="mb-20 section-fade-in">
+            <h2 class="text-3xl font-bold text-center text-sky-900 mb-2">Rutas de Aprendizaje Personalizadas</h2>
+            <p class="text-center text-slate-600 mb-8 max-w-2xl mx-auto">La capacitación está diseñada para las necesidades específicas de cada función. Seleccione su rol para descubrir su ruta de aprendizaje y ver los módulos más relevantes para usted.</p>
+            
+            <div class="flex justify-center mb-10">
+                <select id="role-filter" class="p-3 rounded-lg border-2 border-slate-300 focus:border-sky-500 focus:ring-sky-500 w-full max-w-md text-lg">
+                    <option value="todos">Mostrar todos los roles</option>
+                </select>
+            </div>
+
+            <div id="learning-path-container" class="bg-white p-8 rounded-xl shadow-lg border border-slate-200">
+                <h3 class="text-2xl font-bold text-sky-800 mb-4" id="learning-path-title">Módulos de Capacitación</h3>
+                <p class="text-slate-600 mb-6" id="learning-path-description">A continuación se presentan todos los módulos de la Fase 2. Los módulos relevantes para el rol seleccionado se destacarán.</p>
+                <div id="modules-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+            </div>
+        </section>
+
+        <section id="activities" class="mb-20 section-fade-in bg-slate-100 p-8 rounded-xl">
+            <h2 class="text-3xl font-bold text-center text-sky-900 mb-2">Cronograma de Actividades</h2>
+            <p class="text-center text-slate-600 mb-8 max-w-2xl mx-auto">Explore el desglose completo de actividades planificadas para cada fase del proyecto de capacitación. Cada fase contiene las acciones clave para asegurar el éxito del programa.</p>
+            
+            <div class="text-center mb-10">
+                <a href="https://docs.google.com/spreadsheets/d/1LGnFuzGeiZmx-yWEDTofawt_pxuxOWWFpYiojgb-wF8/edit?usp=drive_link" target="_blank" class="inline-block bg-amber-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-amber-600 transition-colors shadow-md">
+                    🖨️ Imprimir Cronograma
+                </a>
+            </div>
+
+            <div id="accordion-container" class="space-y-4 max-w-4xl mx-auto">
+            </div>
+        </section>
+
+        <section id="evaluation" class="mb-20 section-fade-in">
+            <h2 class="text-3xl font-bold text-center text-sky-900 mb-2">Midiendo el Éxito de la Capacitación</h2>
+            <p class="text-center text-slate-600 mb-12 max-w-2xl mx-auto">La efectividad del programa se medirá a través de indicadores clave de rendimiento (KPIs) y una evaluación de calidad detallada por parte de los participantes.</p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="bg-white p-8 rounded-xl shadow-lg border border-slate-200">
+                    <h3 class="text-2xl font-bold text-sky-800 mb-4">Indicadores Clave (KPIs)</h3>
+                    <ul id="kpi-list" class="space-y-3 text-slate-700">
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-bold text-sky-800 mb-4 text-center">Criterios de Evaluación de Calidad</h3>
+                     <div class="chart-container">
+                        <canvas id="evaluationChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+    </main>
+    
+    <footer class="bg-sky-900 text-white">
+        <div class="container mx-auto px-6 py-8 text-center">
+            <p>&copy; 2025 Consis International. Todos los derechos reservados.</p>
+            <p class="text-sm text-sky-200 mt-2">Plan de Actividades de Capacitación para el Nuevo Core de Grupo INS.</p>
+			<p class="text-sm text-sky-200 mt-2">Elaborado por Gerencia de Formación - Consis University.</p>
+        </div>
+    </footer>
+
+    <script>
+        const trainingData = {
+            phases: [
+                { id: 1, title: "Fase 1: Inducción y Visión General", icon: '🚀', short_desc: "Establece una base conceptual común y genera una actitud positiva hacia el cambio.", purpose: "Proporcionar una visión general de la nueva aplicación, familiarizar a todos los usuarios con su interfaz, sus capacidades y los beneficios que traerá al Grupo INS.", content: ["Forma de ingreso y navegación principal.", "Descripción general de la interfaz y el entorno de trabajo.", "Presentación de los componentes y módulos principales.", "Visión general del ciclo de vida de una póliza en el nuevo sistema.", "Beneficios clave de la nueva plataforma."], methodology: "Sesiones introductorias masivas, realizadas de forma virtual (vía Microsoft Teams) para alcanzar a toda la audiencia. Se utilizarán presentaciones visuales y demostraciones en vivo." },
+                { id: 2, title: "Fase 2: Entrenamiento Profundo", icon: '📚', short_desc: "Desarrolla destrezas y habilidades para las labores diarias con un enfoque práctico.", purpose: "Profundizar en los módulos específicos del Core de Seguros para que los usuarios desarrollen las destrezas y habilidades necesarias para ejecutar sus labores diarias con eficiencia. El énfasis está en el 'aprender haciendo'.", content: ["Entrenamiento detallado en módulos como Configuración de Productos, Administración de Pólizas, Gestión de Siniestros, Facturación, Reaseguros y Capacitación Técnica para TI."], methodology: "Combinación de cursos en línea (E-learning) en una plataforma tipo Moodle con tutoriales y ejercicios prácticos, y talleres interactivos (virtuales o presenciales) para resolver dudas y realizar prácticas guiadas." },
+                { id: 3, title: "Fase 3: Capacitación Especializada", icon: '🎯', short_desc: "Entrenamiento final enfocado en los productos y operaciones específicas del INS.", purpose: "Ofrecer un entrenamiento final y especializado en los productos específicos del INS y las funcionalidades definitivas tal como operarán en producción. El objetivo es asegurar que los equipos dominen los flujos de trabajo y reglas de negocio particulares del Instituto.", content: ["Talleres enfocados en los ramos de Seguros Generales, Personales y Solidarios.", "Uso de la solución en conjunto con los sistemas integrados (CRM, ERP, BI).", "Aplicación de los procesos de cumplimiento regulatorio.", "Gestión de la información de las carteras migradas."], methodology: "Talleres especializados presenciales o mixtos, con casos de uso reales del INS. Se implementará un programa de mentoría donde usuarios expertos apoyen a sus compañeros." }
+            ],
+            roles: [
+                { id: 'operativo', name: 'Usuario Operativo (Suscripción/Pólizas)', modules: ['config_productos', 'admin_polizas', 'cobranza_pagos'] },
+                { id: 'siniestros', name: 'Usuario de Siniestros y Reclamos', modules: ['gestion_siniestros', 'admin_polizas'] },
+                { id: 'tecnico', name: 'Personal Técnico (TI)', modules: ['config_productos', 'admin_polizas', 'gestion_siniestros', 'cobranza_pagos', 'reaseguros', 'capacitacion_tecnica'] },
+                { id: 'negocio', name: 'Usuario de Negocio y Analista', modules: ['config_productos', 'reaseguros'] },
+                { id: 'admin', name: 'Administrador del Sistema', modules: ['config_productos', 'capacitacion_tecnica'] }
+            ],
+            modules: [
+                { id: 'config_productos', title: 'Configuración de Productos y Tablas', icon: '⚙️', desc: 'Creación y mantenimiento de productos, coberturas, y reglas de negocio.' },
+                { id: 'admin_polizas', title: 'Administración de Pólizas', icon: '📄', desc: 'Emisión, endosos, renovación, cancelación y consulta de pólizas.' },
+                { id: 'gestion_siniestros', title: 'Gestión de Siniestros y Reclamos', icon: '🛠️', desc: 'Registro de reclamos, gestión de reservas, pagos y subrogaciones.' },
+                { id: 'cobranza_pagos', title: 'Cobranza, Facturación y Pagos', icon: '💳', desc: 'Administración de cuentas, gestión de pagos y procesos de facturación.' },
+                { id: 'reaseguros', title: 'Reaseguros', icon: '🌐', desc: 'Gestión de contratos de reaseguro cedido y tomado.' },
+                { id: 'capacitacion_tecnica', title: 'Capacitación Técnica (TI)', icon: '💻', desc: 'Arquitectura, BD, desarrollo, integraciones y configuración de la solución.' }
+            ],
+            kpis: [
+                { icon: '✔️', text: '<strong>Tasa de finalización de cursos:</strong> Porcentaje de participantes que completan los cursos asignados.' },
+                { icon: '⭐', text: '<strong>Calificación promedio de evaluaciones:</strong> Nota promedio obtenida en las pruebas de conocimiento.' },
+                { icon: '😊', text: '<strong>Nivel de satisfacción del participante:</strong> Puntuación promedio de las encuestas de calidad.' },
+                { icon: '📉', text: '<strong>Reducción de tickets de soporte:</strong> Disminución en el número de consultas básicas post-capacitación.' },
+                { icon: '⏱️', text: '<strong>Tiempo de ejecución de tareas:</strong> Medición del tiempo en completar procesos clave en el nuevo sistema.' }
+            ],
+            evaluationCriteria: {
+                labels: ['Cobertura de Temas', 'Profundidad', 'Dinamismo', 'Uso del Tiempo', 'Dominio del Tema', 'Claridad', 'Cortesía', 'Materiales', 'Metodología', 'Relevancia'],
+                data: [5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
+            },
+            activitiesData: [
+                { phaseNo: "Fase 1", phaseDesc: "Planificación y Diagnóstico", id: "1.1", name: "Definir los Objetivos de la Capacitación", desc: "Establecer qué se espera que los empleados sean capaces de hacer en el sistema al finalizar la capacitación (Ej: \"El 100% de los analistas de siniestros podrán registrar y liquidar un reclamo de automóvil en menos de 15 minutos\")." },
+                { phaseNo: "Fase 1", phaseDesc: "Planificación y Diagnóstico", id: "1.2", name: "Mapeo y Segmentación de la Audiencia", desc: "Crear una lista completa de todos los usuarios que interactuarán con el sistema. Agrupar a los usuarios por perfiles o roles y determinar su nivel de habilidad tecnológica." },
+                { phaseNo: "Fase 1", phaseDesc: "Planificación y Diagnóstico", id: "1.3", name: "Análisis de Necesidades de Capacitación", desc: "Reunirse con líderes de área para crear una matriz que cruce Perfil de Usuario vs. Funcionalidades del Sistema para saber qué habilidades y destreza deben desarrollar cada grupo." },
+                { phaseNo: "Fase 1", phaseDesc: "Planificación y Diagnóstico", id: "1.4", name: "Definir los Niveles y Modalidades de Capacitación", desc: "Establecer los niveles (Inicial, Avanzado(Configuración), Por Producto) y la modalidad (presencial, en línea, mixta)." },
+                { phaseNo: "Fase 1", phaseDesc: "Planificación y Diagnóstico", id: "1.5", name: "Elaborar un Cronograma General del Proyecto", desc: "Establecer fechas límite para cada fase y coordinar la disponibilidad del personal." },
+                { phaseNo: "Fase 2", phaseDesc: "Diseño y Desarrollo del Programa", id: "2.1", name: "Desarrollo del Contenido Curricular", desc: "Diseñar el temario detallado y los objetivos de aprendizaje específicos para cada sesión y nivel." },
+                { phaseNo: "Fase 2", phaseDesc: "Diseño y Desarrollo del Programa", id: "2.2", name: "Creación de Materiales de Apoyo", desc: "Elaborar manuales, guías rápidas, presentaciones, videos tutoriales, ejercicios prácticos y un documento de preguntas frecuentes (FAQ)." },
+                { phaseNo: "Fase 2", phaseDesc: "Diseño y Desarrollo del Programa", id: "2.3", name: "Configuración del Entorno de Capacitación", desc: "Preparar un ambiente de prueba (sandbox) con datos de ejemplo para que los usuarios puedan practicar sin afectar el sistema real. Crear usuarios y perfiles en la plataforma de e-learning de Consis University." },
+                { phaseNo: "Fase 3", phaseDesc: "Ejecución y Logística", id: "3.1", name: "Plan de Comunicación y Convocatoria", desc: "Enviar comunicaciones oficiales anunciando el plan de capacitación y gestionar la inscripción de los participantes." },
+                { phaseNo: "Fase 3", phaseDesc: "Ejecución y Logística", id: "3.2", name: "Coordinación Logística", desc: "Reservar recursos para sesiones presenciales (salas, equipos) o gestionar la logística para sesiones virtuales (enlaces, pruebas técnicas)." },
+                { phaseNo: "Fase 3", phaseDesc: "Ejecución y Logística", id: "3.3", name: "Impartición de las Sesiones de Capacitación", desc: "Realizar las sesiones según lo planificado, fomentando la participación y resolviendo dudas." },
+                { phaseNo: "Fase 3", phaseDesc: "Ejecución y Logística", id: "3.4", name: "Registro de Asistencia y Calificaciones", desc: "Llevar un control de la asistencia a cada sesión y calificar las evaluaciones para medir el aprendizaje." },
+                { phaseNo: "Fase 4", phaseDesc: "Evaluación y Reforzamiento", id: "4.1", name: "Recopilación de Feedback (Encuesta de Satisfacción)", desc: "Aplicar una encuesta al final de cada curso para evaluar la calidad de la capacitación de acuerdo a los criterios contenidos en el punto 5.4.1.6 del Pliego de Condiciones Core de Seguros." },
+                { phaseNo: "Fase 4", phaseDesc: "Evaluación y Reforzamiento", id: "4.2", name: "Monitoreo Post-Capacitación", desc: "Hacer seguimiento semanas después para ver si los usuarios aplican lo aprendido y qué dificultades encuentran." },
+                { phaseNo: "Fase 4", phaseDesc: "Evaluación y Reforzamiento", id: "4.3", name: "Plan de Reforzamiento Continuo", desc: "Coordinar un centro de ayuda con personal de Consis para programar sesiones de preguntas y respuestas, y ofrecer soporte para resolver dudas." },
+                { phaseNo: "Fase 4", phaseDesc: "Evaluación y Reforzamiento", id: "4.4", name: "Medición del Impacto y Reporte Final", desc: "Analizar si se cumplieron los objetivos, medir el impacto en los indicadores de negocio (KPIs) y preparar un informe final del proyecto." }
+            ]
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const phasesContainer = document.getElementById('phases-container');
+            const phaseDetailsContainer = document.getElementById('phase-details');
+            const roleFilter = document.getElementById('role-filter');
+            const modulesGrid = document.getElementById('modules-grid');
+            const learningPathTitle = document.getElementById('learning-path-title');
+            const learningPathDescription = document.getElementById('learning-path-description');
+            const kpiList = document.getElementById('kpi-list');
+            const accordionContainer = document.getElementById('accordion-container');
+
+            function displayPhases() {
+                phasesContainer.innerHTML = trainingData.phases.map(phase => `
+                    <div class="phase-card bg-white p-6 rounded-xl shadow-md border border-slate-200 cursor-pointer" data-phase-id="${phase.id}">
+                        <div class="text-4xl mb-4">${phase.icon}</div>
+                        <h3 class="font-bold text-xl text-sky-800 mb-2">${phase.title}</h3>
+                        <p class="text-slate-600">${phase.short_desc}</p>
+                    </div>
+                `).join('');
+            }
+
+            function displayPhaseDetails(phaseId) {
+                const phase = trainingData.phases.find(p => p.id == phaseId);
+                if (!phase) {
+                    phaseDetailsContainer.innerHTML = '';
+                    return;
+                }
+                phaseDetailsContainer.innerHTML = `
+                    <div class="bg-sky-50 p-8 rounded-xl border border-sky-200 section-fade-in visible">
+                        <h3 class="text-2xl font-bold text-sky-900 mb-4">${phase.icon} ${phase.title}</h3>
+                        <p class="text-lg font-semibold text-slate-700 mb-2">Propósito y Objetivos:</p>
+                        <p class="text-slate-600 mb-4">${phase.purpose}</p>
+                        <p class="text-lg font-semibold text-slate-700 mb-2">Contenido Principal:</p>
+                        <ul class="list-disc list-inside text-slate-600 mb-4 space-y-1">
+                            ${phase.content.map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                        <p class="text-lg font-semibold text-slate-700 mb-2">Metodología y Herramientas:</p>
+                        <p class="text-slate-600">${phase.methodology}</p>
+                    </div>
+                `;
+            }
+            
+            function populateRoles() {
+                trainingData.roles.forEach(role => {
+                    const option = document.createElement('option');
+                    option.value = role.id;
+                    option.textContent = role.name;
+                    roleFilter.appendChild(option);
+                });
+            }
+
+            function displayModules(selectedRole = 'todos') {
+                const selectedRoleData = trainingData.roles.find(r => r.id === selectedRole);
+                
+                modulesGrid.innerHTML = trainingData.modules.map(module => {
+                    const isDimmed = selectedRole !== 'todos' && !selectedRoleData.modules.includes(module.id);
+                    return `
+                        <div class="module-card bg-white p-6 rounded-xl shadow-md border border-slate-200 ${isDimmed ? 'module-card-dimmed' : ''}">
+                            <div class="text-3xl mb-3">${module.icon}</div>
+                            <h4 class="font-bold text-lg text-sky-800">${module.title}</h4>
+                            <p class="text-slate-600 text-sm">${module.desc}</p>
+                        </div>
+                    `;
+                }).join('');
+
+                if (selectedRole === 'todos') {
+                    learningPathTitle.textContent = 'Módulos de Capacitación';
+                    learningPathDescription.textContent = 'A continuación se presentan todos los módulos de la Fase 2. Seleccione un rol para ver una ruta de aprendizaje específica.';
+                } else {
+                    learningPathTitle.textContent = `Ruta de Aprendizaje para: ${selectedRoleData.name}`;
+                    learningPathDescription.textContent = 'Estos son los módulos recomendados para desarrollar las competencias clave de su rol.';
+                }
+            }
+            
+            function displayKPIs() {
+                kpiList.innerHTML = trainingData.kpis.map(kpi => `
+                    <li class="flex items-start">
+                        <span class="text-xl mr-3">${kpi.icon}</span>
+                        <span>${kpi.text}</span>
+                    </li>
+                `).join('');
+            }
+            
+            function groupActivitiesByPhase(data) {
+                return data.reduce((acc, activity) => {
+                    const key = `${activity.phaseNo}: ${activity.phaseDesc}`;
+                    if (!acc[key]) {
+                        acc[key] = [];
+                    }
+                    acc[key].push(activity);
+                    return acc;
+                }, {});
+            }
+
+            function displayActivitiesAccordion() {
+                const groupedActivities = groupActivitiesByPhase(trainingData.activitiesData);
+                accordionContainer.innerHTML = Object.entries(groupedActivities).map(([phaseName, activities]) => `
+                    <div class="border border-slate-200 rounded-lg bg-white overflow-hidden">
+                        <div class="accordion-header flex justify-between items-center p-4 bg-white hover:bg-slate-50">
+                            <h4 class="font-semibold text-lg text-sky-800">${phaseName}</h4>
+                            <span class="accordion-icon text-sky-600 font-bold text-2xl">⌄</span>
+                        </div>
+                        <div class="accordion-content bg-white">
+                            <div class="p-4 border-t border-slate-200">
+                                <table class="w-full text-left table-auto">
+                                    <thead class="bg-slate-100 text-slate-600">
+                                        <tr>
+                                            <th class="p-3 w-1/6">ID</th>
+                                            <th class="p-3 w-2/6">Nombre Actividad</th>
+                                            <th class="p-3 w-3/6">Descripción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${activities.map(act => `
+                                            <tr class="border-b border-slate-100">
+                                                <td class="p-3 font-medium">${act.id}</td>
+                                                <td class="p-3">${act.name}</td>
+                                                <td class="p-3 text-sm text-slate-600">${act.desc}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            function renderEvaluationChart() {
+                const ctx = document.getElementById('evaluationChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: trainingData.evaluationCriteria.labels.map(label => label.length > 16 ? label.match(/.{1,16}/g) : label),
+                        datasets: [{
+                            label: 'Criterio de Evaluación (Objetivo)',
+                            data: trainingData.evaluationCriteria.data,
+                            backgroundColor: 'rgba(56, 189, 248, 0.2)',
+                            borderColor: 'rgba(14, 116, 144, 1)',
+                            pointBackgroundColor: 'rgba(14, 116, 144, 1)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(14, 116, 144, 1)'
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        scales: { r: { beginAtZero: true, max: 5, stepSize: 1, angleLines: { color: 'rgba(0, 0, 0, 0.1)' }, grid: { color: 'rgba(0, 0, 0, 0.1)' }, pointLabels: { font: { size: 12 }, color: '#475569' }, ticks: { backdropColor: 'rgba(255, 255, 255, 0.75)' } } },
+                        plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: function(context) { return `${context.dataset.label}: ${context.raw}`; } } } }
+                    }
+                });
+            }
+
+            phasesContainer.addEventListener('click', (e) => {
+                const card = e.target.closest('.phase-card');
+                if (card) {
+                    displayPhaseDetails(card.dataset.phaseId);
+                    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            });
+            
+            roleFilter.addEventListener('change', (e) => {
+                displayModules(e.target.value);
+            });
+            
+            accordionContainer.addEventListener('click', (e) => {
+                const header = e.target.closest('.accordion-header');
+                if (header) {
+                    const content = header.nextElementSibling;
+                    header.classList.toggle('open');
+                    content.classList.toggle('open');
+                    if(content.classList.contains('open')) {
+                        const style = getComputedStyle(content.firstElementChild);
+                        const paddingTop = parseFloat(style.paddingTop);
+                        const paddingBottom = parseFloat(style.paddingBottom);
+                        content.style.maxHeight = (content.firstElementChild.scrollHeight + paddingTop + paddingBottom) + "px";
+                        content.style.paddingTop = '1rem';
+                        content.style.paddingBottom = '1rem';
+                    } else {
+                        content.style.maxHeight = '0';
+                        content.style.paddingTop = '0';
+                        content.style.paddingBottom = '0';
+                    }
+                }
+            });
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.section-fade-in').forEach(section => { observer.observe(section); });
+
+            displayPhases();
+            populateRoles();
+            displayModules();
+            displayKPIs();
+            displayActivitiesAccordion();
+            renderEvaluationChart();
+        });
+    </script>
+</body>
+</html>
