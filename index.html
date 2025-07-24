@@ -11,10 +11,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Chosen Palette: Corporate Calm (with Amber accent) -->
-    <!-- Application Structure Plan: Se ha diseñado una SPA (Single Page Application) con una estructura temática y orientada a tareas. La arquitectura consiste en: 1) Un encabezado con navegación fija. 2) Una sección de "Visión General" con KPIs. 3) Una sección interactiva de "Fases". 4) Un filtro por "Roles" que personaliza una "Ruta de Aprendizaje". 5) Una nueva sección "Cronograma de Actividades" que presenta las actividades del proyecto en un formato de acordeón interactivo para una fácil exploración. 6) Una visualización de "Evaluación" con un gráfico de radar. Esta estructura fue elegida porque prioriza la experiencia del usuario, permitiéndole encontrar información relevante y personalizada de forma rápida y visualmente atractiva. -->
+    <!-- Application Structure Plan: Se ha diseñado una SPA (Single Page Application) con una estructura temática y orientada a tareas. La arquitectura consiste en: 1) Un encabezado con navegación fija. 2) Una sección de "Visión General" con KPIs. 3) Una sección interactiva de "Fases". 4) Un filtro por "Roles" que personaliza una "Ruta de Aprendizaje". 5) Una nueva sección "Relación de Actividades" que presenta las actividades del proyecto en un formato de acordeón interactivo para una fácil exploración. 6) Una visualización de "Evaluación" con un gráfico de radar. Esta estructura fue elegida porque prioriza la experiencia del usuario, permitiéndole encontrar información relevante y personalizada de forma rápida y visualmente atractiva. -->
     <!-- Visualization & Content Choices: 
         - Resumen Ejecutivo, Objetivos, Fases, Roles, Módulos, KPIs: Sin cambios respecto a la versión anterior.
-        - Cronograma de Actividades (Nuevo): El contenido del CSV se presenta en un acordeón interactivo. (Goal: Organize/Inform, Method: Interactive Accordion (HTML/JS/CSS), Justification: Permite a los usuarios explorar las actividades fase por fase sin ser abrumados por una lista larga. Es una estructura clara y jerárquica).
+        - Relación de Actividades (Nuevo): El contenido del CSV se presenta en un acordeón interactivo. (Goal: Organize/Inform, Method: Interactive Accordion (HTML/JS/CSS), Justification: Permite a los usuarios explorar las actividades fase por fase sin ser abrumados por una lista larga. Es una estructura clara y jerárquica).
         - Tabla de Actividades (Nuevo): Dentro de cada panel del acordeón, se utiliza una tabla estilizada con Tailwind. (Goal: Inform, Method: HTML Table, Justification: Presenta los detalles de cada actividad de forma estructurada y legible).
         - Botón de Impresión (Nuevo): Un botón claro que enlaza a una versión imprimible. (Goal: Task-Oriented, Method: Styled Link, Justification: Proporciona una funcionalidad solicitada de forma directa).
         - Criterios de Evaluación: Visualizados con un gráfico de radar de Chart.js. (Goal: Inform/Compare, Method: Canvas Chart (Chart.js), Justification: Comunica eficazmente un conjunto de datos multidimensional).
@@ -169,12 +169,12 @@
         </section>
 
         <section id="activities" class="mb-20 section-fade-in bg-slate-100 p-8 rounded-xl">
-            <h2 class="text-3xl font-bold text-center text-sky-900 mb-2">Cronograma de Actividades</h2>
+            <h2 class="text-3xl font-bold text-center text-sky-900 mb-2">Relación de Actividades</h2>
             <p class="text-center text-slate-600 mb-8 max-w-2xl mx-auto">Explore el desglose completo de actividades planificadas para cada fase del proyecto de capacitación. Cada fase contiene las acciones clave para asegurar el éxito del programa.</p>
             
             <div class="text-center mb-10">
                 <a href="https://docs.google.com/spreadsheets/d/1LGnFuzGeiZmx-yWEDTofawt_pxuxOWWFpYiojgb-wF8/edit?usp=drive_link" target="_blank" class="inline-block bg-amber-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-amber-600 transition-colors shadow-md">
-                    🖨️ Imprimir Cronograma
+                    🖨️ Imprimir Actividades
                 </a>
             </div>
 
